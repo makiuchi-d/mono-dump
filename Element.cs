@@ -369,30 +369,49 @@ class ClassElement : Element
 				continue;
 			}
 
-			string ss = "\t";
-			ss += AccessorString(mi) + " ";
+			string ss = "\t" + AccessorString(mi);
 			if(mi.IsStatic)
 			{
-				ss += "static ";
+				ss += " static";
 			}
-			ss += TypeNameString(p.PropertyType) + " " + SafeName(p.Name) + " { ";
-
-			if(p.CanRead)
-			{
-				ss += "get { return "+DefaultValueString(p.PropertyType)+"; } ";
-			}
-			if(p.CanWrite)
-			{
-				string ac = AccessorString(setmi);
-				if(ac!="public")
-				{
-					ss += ac + " ";
-				}
-				ss += "set {} ";
-			}
-			ss += "}";
+			ss += " " + TypeNameString(p.PropertyType);
+			ss += " " + PropertyName(p);
+			ss += " " + PropertyBody(p);
 			s.Add(ss);
 		}
+	}
+
+	string PropertyName(PropertyInfo p)
+	{
+		ParameterInfo[] prms = p.GetIndexParameters();
+		Console.WriteLine("//prop: param="+prms.Length);
+		if(prms.Length==0)
+		{
+			// normal property
+			return SafeName(p.Name);
+		}
+		// indexer
+		return "this [" + String.Join(", ", MethodParams(prms)) + "]";
+	}
+
+	string PropertyBody(PropertyInfo p)
+	{
+		string ss = " {";
+		if(p.CanRead)
+		{
+			ss += "get { return "+DefaultValueString(p.PropertyType)+"; } ";
+		}
+		if(p.CanWrite)
+		{
+			string ac = AccessorString(p.GetSetMethod(true));
+			if(ac!="public")
+			{
+				ss += ac + " ";
+			}
+			ss += "set {} ";
+		}
+		ss += "}";
+		return ss;
 	}
 
 	void DumpConstructors(ref List<string> s)
@@ -415,7 +434,7 @@ class ClassElement : Element
 			}
 			ss += clsname;
 
-			string[] prm = MethodParams(ci);
+			string[] prm = MethodParams(ci.GetParameters());
 			ss += "(" + String.Join(", ", prm) + ")" + BaseConstructor(ci);
 			ss += "{}";
 			s.Add(ss);
@@ -481,7 +500,7 @@ class ClassElement : Element
 			string ss = "\t" + MethodModifires(mi);
 			ss += TypeNameString(mi.ReturnType) + " ";
 
-			string[] prm = MethodParams(mi);
+			string[] prm = MethodParams(mi.GetParameters());
 			ss += SafeName(mi.Name) + "(" + String.Join(", ", prm) + ")";
 			ss += MethodBody(mi);
 
@@ -569,10 +588,10 @@ class ClassElement : Element
 		return ss;
 	}
 
-	protected string[] MethodParams(MethodBase mi)
+	protected string[] MethodParams(ParameterInfo[] parameters)
 	{
 		List<string> a = new List<string>();
-		foreach(ParameterInfo pi in mi.GetParameters())
+		foreach(ParameterInfo pi in parameters)
 		{
 			string s = "";
 			string t = TypeNameString(pi.ParameterType);
@@ -727,7 +746,7 @@ class InterfaceElement : ClassElement
 				continue;
 			}
 			string ss = "\t" + TypeNameString(mi.ReturnType) + " ";
-			string[] prm = MethodParams(mi);
+			string[] prm = MethodParams(mi.GetParameters());
 			ss += SafeName(mi.Name) + "(" + String.Join(", ", prm) + ");";
 			s.Add(ss);
 		}

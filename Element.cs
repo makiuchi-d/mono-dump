@@ -384,7 +384,6 @@ class ClassElement : Element
 	string PropertyName(PropertyInfo p)
 	{
 		ParameterInfo[] prms = p.GetIndexParameters();
-		Console.WriteLine("//prop: param="+prms.Length);
 		if(prms.Length==0)
 		{
 			// normal property

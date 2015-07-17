@@ -313,12 +313,12 @@ class ClassElement : Element
 			}
 
 			FieldAttributes attr = f.Attributes;
-			if(ContainAttr(attr, FieldAttributes.Private))
+			if(f.IsPrivate)
 			{
 				continue;
 			}
 
-			string ss = "\t" + AccessorString(attr) + " ";
+			string ss = "\t" + AccessorString(f) + " ";
 
 			if(ContainAttr(attr, FieldAttributes.Static)
 			   && !ContainAttr(attr, FieldAttributes.Literal))
@@ -521,20 +521,25 @@ class ClassElement : Element
 		return ((attr&target)==target);
 	}
 
-	string AccessorString(FieldAttributes attr)
+	string AccessorString(FieldInfo fi)
 	{
-		if(ContainAttr(attr, FieldAttributes.Public))
+		if(fi.IsPublic)
 		{
 			return "public";
 		}
-		else if(ContainAttr(attr, FieldAttributes.Private))
-		{
-			return "private";
-		}
-		else
+		if(fi.IsFamily)
 		{
 			return "protected";
 		}
+		if(fi.IsAssembly)
+		{
+			return "internal";
+		}
+		if(fi.IsFamilyOrAssembly)
+		{
+			return "protected internal";
+		}
+		return "private";
 	}
 	string AccessorString(MethodBase mi)
 	{
